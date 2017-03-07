@@ -1,0 +1,10 @@
+*~
+node_modules/
+lib/
+typings/
+build/
+npm-debug.log
+.DS_Store
+coverage/
+.DS_Store
+

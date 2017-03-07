@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "outDir": "lib",
+    "target": "es5",
+    "noLib": true,
+    "noImplicitAny": true,
+    "stripInternal": true,
+    "declaration": true
+  },
+  "files": [
+    "src/index.ts",
+    "src/FunctionChannel.ts",
+    "node_modules/typescript/lib/lib.d.ts",
+    "typings/index.d.ts"
+  ]
+}
