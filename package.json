@@ -19,7 +19,8 @@
     "vinyl-source-stream": "^1.1.0",
     "gulp-jasmine": "~2.4.1",
     "gulp-istanbul": "~1.1.1",
-    "typescript": "1.8.10"
+    "typescript": "1.8.10",
+    "@cross-border-bridge/memory-queue-data-bus": "~2.0.0"
   },
   "files": [
     "lib"
