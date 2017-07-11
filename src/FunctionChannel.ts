@@ -125,6 +125,14 @@ class FunctionChannel {
             return;
         }
         var result: any = this._bindingObjects[id][methodName](...args);
-        if (callback) callback([FMT_EDO, result]);
+        if (callback) {
+            if (!!(result && result.constructor && result.call && result.apply)) {
+                result(function(r: any) {
+                    callback([FMT_EDO, r]);
+                });
+            } else {
+                callback([FMT_EDO, result]);
+            }
+        }
     }
 }
