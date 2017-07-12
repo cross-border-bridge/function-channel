@@ -2,6 +2,9 @@
 
 describe("FunctionChannelSpec", function() {
     var fc = require("../lib/FunctionChannel.js");
+    var dc = require("../node_modules/@cross-border-bridge/data-channel/lib/index.js");
+    var db = require("../node_modules/@cross-border-bridge/memory-queue-data-bus/lib/index.js");
+    var mq = require("../node_modules/@cross-border-bridge/memory-queue/lib/index.js");
     var dummyDataChannel = new Object();
     var functionChannel;
     var handler;
@@ -153,5 +156,57 @@ describe("FunctionChannelSpec", function() {
         functionChannel.unbind();
         functionChannel.invoke();
         functionChannel.destroy();
+    });
+
+    it("combined-test", function() {
+        var mq1 = new mq.MemoryQueue();
+        var mq2 = new mq.MemoryQueue();
+
+        // 送信側FunctionChannelを作成
+        var dataBusS = new db.MemoryQueueDataBus(mq1, mq2);
+        var dataChannelS = new dc.DataChannel(dataBusS);
+        var functionChannelS = new fc.FunctionChannel(dataChannelS);
+
+        // 受信側FunctionChannelを作成
+        var dataBusR = new db.MemoryQueueDataBus(mq2, mq1);
+        var dataChannelR = new dc.DataChannel(dataBusR);
+        var functionChannelR = new fc.FunctionChannel(dataChannelR);
+
+        // 受信側FunctionChannelに登録するクラス(MyClassJS)を準備
+        var MyClassJS = (function () {
+            function MyClassJS() {
+            }
+            MyClassJS.prototype.foo = function (a1, a2, a3) {
+                return a1 + a2 + a3;
+            };
+            MyClassJS.prototype.fooA = function (a1, a2, a3) {
+                return function(callback) {
+                    callback(a1 + a2 + a3);
+                }
+            };
+            return MyClassJS;
+        })();
+        functionChannelR.bind("MyClassJS", new MyClassJS());
+
+        // 送信側からfooを実行
+        functionChannelS.invoke("MyClassJS", "foo", ["A", "BB", "CCC"], function(error, result) {
+            console.log("foo: " + result);
+            expect("ABBCCC").toEqual(result);
+        });
+
+        // 送信側からfooAを実行
+        functionChannelS.invoke("MyClassJS", "fooA", ["D", "E", "F"], function(error, result) {
+            console.log("fooA: " + result);
+            expect("DEF").toEqual(result);
+        });
+
+        // 破棄
+        functionChannelR.unbind("MyClassJS");
+        functionChannelR.destroy();
+        dataChannelR.destroy();
+        dataBusR.destroy();
+        functionChannelS.destroy();
+        dataChannelS.destroy();
+        dataBusS.destroy();
     });
 });
