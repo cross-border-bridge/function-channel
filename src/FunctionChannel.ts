@@ -18,7 +18,7 @@ const ERROR_TYPE_OBJECT_NOT_BOUND = 'ObjectNotBound';
 const ERROR_TYPE_METHOD_NOT_EXIST = 'MethodNotExist';
 
 type FunctionChannelCallback = (error?: string, result?: any) => void;
-type KnownFormat = 'omi' | 'edo' | 'err'; 
+type KnownFormat = 'omi' | 'edo' | 'err';
 type PacketFormat = KnownFormat | string;
 
 class FunctionChannel {
@@ -91,13 +91,13 @@ class FunctionChannel {
         if (!this._dataChannel) return;
         var dcc: DataChannelCallback;
         if (callback) {
-            dcc = function(error: DataChannelError, packet: any) {
+            dcc = function(error: DataChannelError, packet: any[]) {
                 if (error) {
                     callback.apply(this, [error]);
                 } else if (FMT_ERR === packet[0]) {
                     callback.apply(this, [packet[1]]);
                 } else {
-                    callback.apply(this, [undefined, packet[1]]);
+                    callback.apply(this, [undefined, ...packet.splice(1, packet.length - 1)]);
                 }
             }
         } else {
@@ -114,7 +114,7 @@ class FunctionChannel {
             console.warn('unknown format', packet[0]);
         }
     }
-    
+
     private dispatchMethodInvocation(id: string, methodName: string, args: any[], callback?: DataChannelResponseCallback) {
         if (!this._bindingObjects[id]) {
             if (callback) callback([FMT_ERR, ERROR_TYPE_OBJECT_NOT_BOUND]);
@@ -127,8 +127,8 @@ class FunctionChannel {
         var result: any = this._bindingObjects[id][methodName](...args);
         if (callback) {
             if (typeof result === "function") {
-                result(function(r: any) {
-                    callback([FMT_EDO, r]);
+                result(function(...r: any[]) {
+                    callback([FMT_EDO, ...r]);
                 });
             } else {
                 callback([FMT_EDO, result]);

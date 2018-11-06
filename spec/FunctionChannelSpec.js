@@ -87,12 +87,12 @@ describe("FunctionChannelSpec", function() {
             expect("a", packet[1][2][0]);
             expect("b", packet[1][2][1]);
             expect("c", packet[1][2][2]);
-            callback(undefined, ["edo", "RESPONSE"]);
+            callback(undefined, ["edo", "RESPONSE", "with", "args"]);
         }
-        functionChannel.invoke("id", "method", ["a", "b", "c"], function(error, result) {
+        functionChannel.invoke("id", "method", ["a", "b", "c"], function(error, ...results) {
             console.log(JSON.stringify(arguments));
             expect(error).toBeUndefined();
-            expect("RESPONSE").toEqual(result);
+            expect(results).toEqual(["RESPONSE", "with", "args"]);
         });
     })
 
@@ -181,7 +181,7 @@ describe("FunctionChannelSpec", function() {
             };
             MyClassJS.prototype.fooA = function (a1, a2, a3) {
                 return function(callback) {
-                    callback(a1 + a2 + a3);
+                    callback(a1 + a2, a3);
                 }
             };
             return MyClassJS;
@@ -195,9 +195,10 @@ describe("FunctionChannelSpec", function() {
         });
 
         // 送信側からfooAを実行
-        functionChannelS.invoke("MyClassJS", "fooA", ["D", "E", "F"], function(error, result) {
-            console.log("fooA: " + result);
-            expect("DEF").toEqual(result);
+        functionChannelS.invoke("MyClassJS", "fooA", ["D", "E", "F"], function(error, ...results) {
+            console.log("fooA: " + results[0] + results[1]);
+            expect(results[0]).toEqual("DE");
+            expect(results[1]).toEqual("F");
         });
 
         // 破棄
